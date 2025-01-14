@@ -1,43 +1,47 @@
-using UnityEngine;
 using Unity.Netcode;
+using UnityEngine;
 
-public class NetworkMovement : NetworkBehaviour
+public class Player : NetworkBehaviour
 {
+    [HideInInspector]
     public NetworkVariable<Vector3> Position = new();
+    [HideInInspector]
     public NetworkVariable<Vector3> Velocity = new();
+    [HideInInspector]
     public NetworkVariable<float> Speed = new();
     private float speed;
     [SerializeField] Rigidbody rb;
     [Rpc(SendTo.Server)]
-    void SubmitPositionRequestServerRpc(Vector3 position, RpcParams rpcParams = default) => Position.Value = position;  
+    void SubmitPositionRequestServerRpc(Vector3 position, RpcParams rpcParams = default) => Position.Value = position;
     [Rpc(SendTo.Server)]
-    void SubmitVelocityRequestServerRpc(Vector3 velocity, RpcParams rpcParams = default) => Velocity.Value = velocity;  
+    void SubmitVelocityRequestServerRpc(Vector3 velocity, RpcParams rpcParams = default) => Velocity.Value = velocity;
     [Rpc(SendTo.Server)]
     void SubmitSpeedRequestServerRpc(float speed, RpcParams rpcParams = default) => Speed.Value = speed;
     void Update()
     {
-        if(IsOwner && (!IsServer || IsHost)) 
+        if (IsOwner && (!IsServer || IsHost))
         {
             float moveX = Input.GetAxis("Horizontal");
             float moveZ = Input.GetAxis("Vertical");
             speed = Speed.Value;
-            Vector3 movement =new Vector3(moveX,0f,moveZ) * speed * Time.deltaTime;
+            Vector3 movement = new Vector3(moveX, 0f, moveZ) * speed * Time.deltaTime;
             rb.AddForce(movement);
             SubmitPositionRequestServerRpc(transform.position);
             SubmitPositionRequestServerRpc(rb.linearVelocity);
         }
 
-        if (IsServer || IsHost) 
+        if (IsServer || IsHost)
         {
             transform.position = Position.Value;
             rb.linearVelocity = Velocity.Value;
         }
 
-        else 
+        else
         {
             rb.linearVelocity = Velocity.Value;
             transform.position = Position.Value;
         }
-        
+
     }
+
 }

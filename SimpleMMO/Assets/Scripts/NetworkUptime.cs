@@ -21,8 +21,6 @@ public class NetworkUptime : NetworkBehaviour
             Debug.Log("Uptime init as " + ServerUptimeNetworkVariable.Value);
         }
     }
-
-    // Update is called once per frame
     void Update()
     {
         var t_now = Time.time;
