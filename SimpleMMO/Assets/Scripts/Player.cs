@@ -21,8 +21,20 @@ public class Player : NetworkBehaviour
     [Rpc(SendTo.Server)]
     void SubmitVelocityRequestServerRpc(Vector3 velocity, RpcParams rpcParams = default) => Velocity.Value = velocity;
     [Rpc(SendTo.Server)]
-    void SubmitSpeedRequestServerRpc(float speed, RpcParams rpcParams = default) => Speed.Value = speed;
 
+
+    public void Awake()
+    {
+        Position.OnValueChanged += OnPositionChanged;
+    }
+
+    private void OnPositionChanged(Vector3 oldPos,Vector3 newPos) 
+    {
+        if (!IsOwner) 
+        {
+            transform.position = newPos;
+        }
+    }
 
     public override void OnNetworkSpawn()
     {
@@ -40,7 +52,7 @@ public class Player : NetworkBehaviour
     }
     void Update()
     {
-        if (IsOwner && (!IsServer || IsHost))
+        if (IsOwner)
         {
             float moveX = Input.GetAxis("Horizontal");
             float moveZ = Input.GetAxis("Vertical");
@@ -51,7 +63,7 @@ public class Player : NetworkBehaviour
             SubmitVelocityRequestServerRpc(rb.linearVelocity);
         }
 
-        if (IsServer || IsHost)
+        if (!IsServer && !IsOwner)
         {
             transform.position = Position.Value;
         }
@@ -62,7 +74,6 @@ public class Player : NetworkBehaviour
 
     public void OnCollisionEnter(Collision collision)
     {
-        Debug.Log(collision.gameObject.tag);
         if (collision.gameObject.CompareTag("Damageable")) 
         {
             string name = IsClient ? "Client" : "Server";

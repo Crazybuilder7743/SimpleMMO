@@ -18,6 +18,7 @@ public class Enemy : NetworkBehaviour , IDamageable
         {
             currentHP = HP.Value;
         }
+        Debug.Log(this.gameObject.tag);
     }
 
     public bool TakeDamage(float damage) 
