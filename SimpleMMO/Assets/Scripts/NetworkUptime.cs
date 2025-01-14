@@ -1,4 +1,4 @@
-using NUnit.Framework;
+
 using Unity.Netcode;
 using UnityEngine;
 using TMPro;
@@ -9,10 +9,6 @@ public class NetworkUptime : NetworkBehaviour
     private float last_t = 0f;
     [SerializeField] private TextMeshProUGUI text;
 
-    private void Start()
-    {
-        Assert.IsNotNull(text);
-    }
     public override void OnNetworkSpawn()
     {
         if (IsServer) 

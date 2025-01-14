@@ -1,8 +1,6 @@
 using TMPro;
-using UnityEngine.Assertions;
 using Unity.Netcode;
 using UnityEngine;
-using System.Collections.Generic;
 
 public class NetworkHUD : NetworkBehaviour
 {

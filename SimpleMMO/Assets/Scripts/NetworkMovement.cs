@@ -18,6 +18,7 @@ public class NetworkMovement : NetworkBehaviour
     {
         if(IsOwner && (!IsServer || IsHost)) 
         {
+            Debug.Log("Test");
             float moveX = Input.GetAxis("Horizontal");
             float moveZ = Input.GetAxis("Vertical");
             speed = Speed.Value;
