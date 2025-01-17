@@ -1,3 +1,4 @@
+using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -6,6 +7,9 @@ public class Player : NetworkBehaviour
     [SerializeField] private float defaultSpeed = 1.0f;
     [SerializeField] private float maxAllowedDesync = 1.0f;
     [SerializeField] private float defaultDamageFactor = 1.0f;
+    public static float movementToLookAssignAngle = 0;
+    [HideInInspector]
+    public NetworkVariable<FixedString64Bytes> playerName = new();
     private float inputX= 0.0f;
     private float inputZ = 0.0f;
     private bool inputY = false;
@@ -36,8 +40,10 @@ public class Player : NetworkBehaviour
     void SubmitPositionRequestClientRpc(Vector3 position, RpcParams rpcParams = default) => transform.position = Position.Value;
     [Rpc(SendTo.Server)]
     void SubmitVelocityRequestServerRpc(Vector3 velocity, RpcParams rpcParams = default) => NewVelocity.Value = velocity;
+    [Rpc(SendTo.Server)]
+    void SubmitNameRequestServerRpc(FixedString64Bytes newName, RpcParams rpcParams = default) => playerName.Value = newName;
     [Rpc(SendTo.ClientsAndHost)]
-    void SubmitVelocityRequestClientRpc(Vector3 velocity, RpcParams rpcParams = default) => rb.linearVelocity= Velocity.Value ;
+    void SubmitVelocityRequestClientRpc(Vector3 velocity, RpcParams rpcParams = default) => rb.linearVelocity= Velocity.Value;
 
 
     public void Awake()
@@ -60,6 +66,12 @@ public class Player : NetworkBehaviour
         if (!IsServer)
         {
             speed = Speed.Value;
+            if (IsOwner)
+            {
+                FixedString64Bytes tmp = PlayerPrefs.GetString(MainMenu.PLAYERPREFS_NAME_STRING);
+                SubmitNameRequestServerRpc(tmp);
+                FollowPlayer.SetFollowObject(this.transform);
+            }
         }
         else
         {
@@ -73,6 +85,10 @@ public class Player : NetworkBehaviour
         {
             inputX = Input.GetAxis("Horizontal");
             inputZ = Input.GetAxis("Vertical");
+            Vector3 inputs = Quaternion.AngleAxis(movementToLookAssignAngle, Vector3.up) * new Vector3(inputX,0, inputZ);
+            inputX = inputs.x;
+            inputZ = inputs.z;
+            //rotate inputs so it aligns with view
             inputY = Input.GetKey(KeyCode.Space);
             float y = inputY ? 1 : 0;
             SubmitInputRequestServerRpc(new Vector3(inputX,y,inputZ));
@@ -86,7 +102,6 @@ public class Player : NetworkBehaviour
         {
             if(Vector3.Distance(transform.position,NewPosition.Value) >= maxAllowedDesync) 
             {
-                SubmitPositionRequestClientRpc(transform.position);
                 SubmitVelocityRequestClientRpc(rb.linearVelocity);
             }
 
@@ -95,6 +110,16 @@ public class Player : NetworkBehaviour
                 Velocity.Value = NewVelocity.Value;
                 Position.Value = NewPosition.Value;
                 transform.position = NewPosition.Value;
+                rb.linearVelocity = NewVelocity.Value;
+            }
+            if(Vector3.Distance(rb.linearVelocity,NewVelocity.Value) >= maxAllowedDesync) 
+            {
+                SubmitVelocityRequestClientRpc(rb.linearVelocity);
+            }
+
+            else 
+            {
+                Velocity.Value = NewVelocity.Value;
                 rb.linearVelocity = NewVelocity.Value;
             }
 
@@ -112,8 +137,6 @@ public class Player : NetworkBehaviour
     {
         if (collision.gameObject.CompareTag("Damageable")) 
         {
-            string name = IsClient ? "Client" : "Server";
-
             collision.gameObject.GetComponent<IDamageable>().TakeDamage(VelocityToDamageFactor.Value*Velocity.Value.magnitude);
         }
     }
