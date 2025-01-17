@@ -1,15 +1,22 @@
 using Unity.Netcode;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 
 public class Player : NetworkBehaviour
 {
     [SerializeField] private float defaultSpeed = 1.0f;
+    [SerializeField] private float maxAllowedDesync = 1.0f;
     [SerializeField] private float defaultDamageFactor = 1.0f;
+    private float inputX= 0.0f;
+    private float inputZ = 0.0f;
+    private bool inputY = false;
     [HideInInspector]
-    public NetworkVariable<Vector3> Position = new();
+    public NetworkVariable<Vector3> Position = new(); 
+    [HideInInspector]
+    public NetworkVariable<Vector3> NewPosition = new();
     [HideInInspector]
     public NetworkVariable<Vector3> Velocity = new();
+    [HideInInspector]
+    public NetworkVariable<Vector3> NewVelocity = new();
     [HideInInspector]
     public NetworkVariable<float> Speed = new();
     [HideInInspector]
@@ -17,9 +24,20 @@ public class Player : NetworkBehaviour
     private float speed;
     Rigidbody rb;
     [Rpc(SendTo.Server)]
-    void SubmitPositionRequestServerRpc(Vector3 position, RpcParams rpcParams = default) => Position.Value = position;
+    void SubmitPositionRequestServerRpc(Vector3 position, RpcParams rpcParams = default) => NewPosition.Value = position;
     [Rpc(SendTo.Server)]
-    void SubmitVelocityRequestServerRpc(Vector3 velocity, RpcParams rpcParams = default) => Velocity.Value = velocity;
+    void SubmitInputRequestServerRpc(Vector3 input, RpcParams rpcParams = default)
+    {
+        inputX = input.x;
+        inputZ = input.z;
+        inputY = input.y > 0 ? true : false; 
+    }
+    [Rpc(SendTo.ClientsAndHost)]
+    void SubmitPositionRequestClientRpc(Vector3 position, RpcParams rpcParams = default) => transform.position = Position.Value;
+    [Rpc(SendTo.Server)]
+    void SubmitVelocityRequestServerRpc(Vector3 velocity, RpcParams rpcParams = default) => NewVelocity.Value = velocity;
+    [Rpc(SendTo.ClientsAndHost)]
+    void SubmitVelocityRequestClientRpc(Vector3 velocity, RpcParams rpcParams = default) => rb.linearVelocity= Velocity.Value ;
 
 
     public void Awake()
@@ -38,10 +56,10 @@ public class Player : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
+        rb = this.gameObject.AddComponent<Rigidbody>();
         if (!IsServer)
         {
             speed = Speed.Value;
-            rb = this.gameObject.AddComponent<Rigidbody>();
         }
         else
         {
@@ -53,16 +71,35 @@ public class Player : NetworkBehaviour
     {
         if (IsOwner)
         {
-            float moveX = Input.GetAxis("Horizontal");
-            float moveZ = Input.GetAxis("Vertical");
+            inputX = Input.GetAxis("Horizontal");
+            inputZ = Input.GetAxis("Vertical");
+            inputY = Input.GetKey(KeyCode.Space);
+            float y = inputY ? 1 : 0;
+            SubmitInputRequestServerRpc(new Vector3(inputX,y,inputZ));
             speed = Speed.Value;
-            Vector3 movement = new Vector3(moveX, 0f, moveZ) * speed * Time.deltaTime;
+            Vector3 movement = new Vector3(inputX, 0f, inputZ) * speed * Time.deltaTime;
             rb.AddForce(movement);
             SubmitPositionRequestServerRpc(transform.position);
             SubmitVelocityRequestServerRpc(rb.linearVelocity);
         }
+        if(IsServer)
+        {
+            if(Vector3.Distance(transform.position,NewPosition.Value) >= maxAllowedDesync) 
+            {
+                SubmitPositionRequestClientRpc(transform.position);
+                SubmitVelocityRequestClientRpc(rb.linearVelocity);
+            }
 
-        if (!IsServer && !IsOwner)
+            else 
+            {
+                Velocity.Value = NewVelocity.Value;
+                Position.Value = NewPosition.Value;
+                transform.position = NewPosition.Value;
+                rb.linearVelocity = NewVelocity.Value;
+            }
+
+        }
+        else if (!IsServer && !IsOwner)
         {
             transform.position = Position.Value;
         }
@@ -77,8 +114,7 @@ public class Player : NetworkBehaviour
         {
             string name = IsClient ? "Client" : "Server";
 
-            Debug.Log(collision.gameObject.name + " Hit on " + name);
-            collision.gameObject.GetComponent<IDamageable>().TakeDamage(VelocityToDamageFactor.Value);
+            collision.gameObject.GetComponent<IDamageable>().TakeDamage(VelocityToDamageFactor.Value*Velocity.Value.magnitude);
         }
     }
 

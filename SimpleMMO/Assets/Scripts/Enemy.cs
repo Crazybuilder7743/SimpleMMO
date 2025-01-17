@@ -1,3 +1,4 @@
+
 using Unity.Netcode;
 using UnityEngine;
 
@@ -6,6 +7,10 @@ public class Enemy : NetworkBehaviour , IDamageable
     public float MaxHP;
     [HideInInspector] public NetworkVariable<float> HP = new();
     [SerializeField] private float currentHP; //local var only to Display current health
+    [SerializeField] private GameObject shatterEffectObject;
+
+    [Rpc(SendTo.NotServer)]
+    void SendDeathClientsRpc(RpcParams rpcParams = default) { Shatter(); }
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
@@ -17,8 +22,24 @@ public class Enemy : NetworkBehaviour , IDamageable
         else 
         {
             currentHP = HP.Value;
+            HP.OnValueChanged += Die;
         }
-        Debug.Log(this.gameObject.tag);
+    }
+
+
+    private void Die(float oldHealth,float newHealth) 
+    {
+        if(newHealth <= 0) 
+        {
+            if (IsServer)
+            {
+                Destroy(this.gameObject);
+            }
+            else 
+            {
+                Shatter();
+            }
+        }
     }
 
     public bool TakeDamage(float damage) 
@@ -26,20 +47,23 @@ public class Enemy : NetworkBehaviour , IDamageable
         if (!IsOwner)
         {
             currentHP = HP.Value;
-            if(currentHP <= 0)
-            {
-                return true;
-            }
-            return false;
+            return HP.Value<=0;
         }
 
         HP.Value -= damage;
         currentHP -= HP.Value;
         if (HP.Value <= 0) 
         {
+            Die(0,HP.Value);
             return true; // enemy dies
         }
 
         return false;
+    }
+
+    private void Shatter() 
+    {
+        Destroy(gameObject.transform.GetChild(0));
+        //play shatter effect
     }
 }
