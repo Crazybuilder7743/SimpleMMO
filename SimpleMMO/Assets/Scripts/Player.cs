@@ -20,7 +20,6 @@ public class Player : NetworkBehaviour
     void SubmitPositionRequestServerRpc(Vector3 position, RpcParams rpcParams = default) => Position.Value = position;
     [Rpc(SendTo.Server)]
     void SubmitVelocityRequestServerRpc(Vector3 velocity, RpcParams rpcParams = default) => Velocity.Value = velocity;
-    [Rpc(SendTo.Server)]
 
 
     public void Awake()
