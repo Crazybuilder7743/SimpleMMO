@@ -29,7 +29,6 @@ public class MainMenu : MonoBehaviour
     {
         int tmp = isLocalHost.isOn ? 1 : 0;
         PlayerPrefs.SetInt(PLAYERPREFS_LOCALHOST_STRING, tmp);
-        Debug.Log(tmp);
     }
 
     public void Play() 

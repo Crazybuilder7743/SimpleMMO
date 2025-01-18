@@ -1,9 +1,13 @@
+using System.Collections;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class ClientStarter : MonoBehaviour
 {
+    const float WAITTIME = 5f;
+    bool connected = false;
     private const string DEFAULT_IP = "16.170.228.149";
     [SerializeField] UnityTransport localHostConnection;
     [SerializeField] UnityTransport serverConnetion;
@@ -26,6 +30,16 @@ public class ClientStarter : MonoBehaviour
         if (NetworkManager.Singleton != null) 
         {
             NetworkManager.Singleton.StartClient();
+            StartCoroutine(HasConnectionWorked());
+        }
+    }
+
+    IEnumerator HasConnectionWorked() 
+    {
+        yield return new WaitForSeconds(WAITTIME);
+        if (NetworkManager.Singleton.IsConnectedClient == false)
+        {
+            SceneManager.LoadScene(0);
         }
     }
 }
