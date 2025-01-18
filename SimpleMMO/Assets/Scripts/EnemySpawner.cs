@@ -28,7 +28,7 @@ public class EnemySpawner : MonoBehaviour
         do spawnID = Random.Range(0,enemySpawnPoints.Count); while (usedSpawnPoints.Contains(spawnID));
         Enemy instantiatedEnemy = Instantiate(enemy);
         instantiatedEnemy.SetOwnerAndSpawnID(this,spawnID);
-        enemy.transform.position = enemySpawnPoints[spawnID];
+        enemy.transform.position = this.transform.position + enemySpawnPoints[spawnID];
         instantiatedEnemy.GetComponent<NetworkObject>().Spawn();
     }
 
@@ -38,7 +38,7 @@ public class EnemySpawner : MonoBehaviour
         Gizmos.color = Color.green;
         foreach(var item in enemySpawnPoints) 
         {
-            Gizmos.DrawSphere(item,1);
+            Gizmos.DrawSphere(this.transform.position + item,1);
         }
     }
 }

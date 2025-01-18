@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 
 public class FollowPlayer : MonoBehaviour

@@ -2230,7 +2230,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playScene: Client
   isLocalHost: {fileID: 1854398564}
-  nameInput: {fileID: 2054636230}
+  nameInput: {fileID: 619443270}
   ipInput: {fileID: 749722586}
 --- !u!114 &1775521436
 MonoBehaviour:

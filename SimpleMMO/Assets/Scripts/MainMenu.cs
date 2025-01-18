@@ -12,7 +12,7 @@ public class MainMenu : MonoBehaviour
     public const string PLAYERPREFS_LOCALHOST_STRING = "localhost";
     [SerializeField] string playScene;
     [SerializeField] Toggle isLocalHost;
-    [SerializeField] TextMeshProUGUI nameInput;
+    [SerializeField] TMP_InputField nameInput;
     [SerializeField] TMP_InputField ipInput;
 
     public void Awake()

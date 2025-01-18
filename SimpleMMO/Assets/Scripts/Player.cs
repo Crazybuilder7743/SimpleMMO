@@ -1,12 +1,15 @@
 using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Player : NetworkBehaviour
 {
     [SerializeField] private float defaultSpeed = 1.0f;
     [SerializeField] private float maxAllowedDesync = 1.0f;
     [SerializeField] private float defaultDamageFactor = 1.0f;
+    [SerializeField] PlayerTag playerTagPrefab;
+    PlayerTag playerTag;
     public static float movementToLookAssignAngle = 0;
     [HideInInspector]
     public NetworkVariable<FixedString64Bytes> playerName = new();
@@ -85,6 +88,10 @@ public class Player : NetworkBehaviour
         {
             inputX = Input.GetAxis("Horizontal");
             inputZ = Input.GetAxis("Vertical");
+            if (Input.GetKey(KeyCode.Escape)) 
+            {
+                SceneManager.LoadScene(0);
+            }
             Vector3 inputs = Quaternion.AngleAxis(movementToLookAssignAngle, Vector3.up) * new Vector3(inputX,0, inputZ);
             inputX = inputs.x;
             inputZ = inputs.z;
@@ -140,5 +147,4 @@ public class Player : NetworkBehaviour
             collision.gameObject.GetComponent<IDamageable>().TakeDamage(VelocityToDamageFactor.Value*Velocity.Value.magnitude);
         }
     }
-
 }
