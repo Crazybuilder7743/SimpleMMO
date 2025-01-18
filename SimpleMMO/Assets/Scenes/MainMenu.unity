@@ -2231,7 +2231,7 @@ MonoBehaviour:
   playScene: Client
   isLocalHost: {fileID: 1854398564}
   nameInput: {fileID: 2054636230}
-  ipInput: {fileID: 1331492588}
+  ipInput: {fileID: 749722586}
 --- !u!114 &1775521436
 MonoBehaviour:
   m_ObjectHideFlags: 0
