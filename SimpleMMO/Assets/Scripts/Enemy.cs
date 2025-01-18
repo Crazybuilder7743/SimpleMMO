@@ -5,6 +5,10 @@ using UnityEngine;
 public class Enemy : NetworkBehaviour , IDamageable
 {
     public float MaxHP;
+    private float dissAppearTime = 5f;
+    private EnemySpawner owner;
+    private int spawnID = -1;
+    [SerializeField] GameObject mesh;
     [HideInInspector] public NetworkVariable<float> HP = new();
     [SerializeField] private float currentHP; //local var only to Display current health
     [SerializeField] private GameObject shatterEffectObject;
@@ -26,16 +30,26 @@ public class Enemy : NetworkBehaviour , IDamageable
         }
     }
 
-
+    public void SetOwnerAndSpawnID(EnemySpawner enemySpawner,int spawnpointID) 
+    {
+        owner = enemySpawner;
+        spawnID = spawnpointID;
+    }
     private void Die(float oldHealth,float newHealth) 
     {
         if(newHealth <= 0) 
         {
             if (IsServer)
             {
-                Destroy(this.gameObject);
+                Destroy(mesh);
+                this.GetComponent<BoxCollider>().enabled = false;
+                //Destroy(this.gameObject, dissAppearTime);
+                if (owner != null)
+                {
+                    owner.ReactivateSpawnPoint(spawnID);
+                }
             }
-            else 
+            else
             {
                 Shatter();
             }
@@ -63,7 +77,9 @@ public class Enemy : NetworkBehaviour , IDamageable
 
     private void Shatter() 
     {
-        Destroy(gameObject.transform.GetChild(0));
+        Destroy(mesh);
+        this.gameObject.GetComponent<BoxCollider>().isTrigger = true;
+        Destroy(Instantiate(shatterEffectObject,this.transform,false),dissAppearTime);
         //play shatter effect
     }
 }

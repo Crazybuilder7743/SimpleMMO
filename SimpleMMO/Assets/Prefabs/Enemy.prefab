@@ -73,10 +73,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
-  MaxHP: 50
+  MaxHP: 10
+  mesh: {fileID: 8785619905708782878}
   HP:
     m_InternalValue: 0
   currentHP: 0
+  shatterEffectObject: {fileID: 2541062184298890913, guid: 6ce891e332cea1a4bbfa4d2f46910371, type: 3}
 --- !u!65 &5361221764431144703
 BoxCollider:
   m_ObjectHideFlags: 0

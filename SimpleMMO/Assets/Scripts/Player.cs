@@ -62,7 +62,7 @@ public class Player : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         base.OnNetworkSpawn();
-        rb = this.gameObject.AddComponent<Rigidbody>();
+        rb = this.gameObject.GetComponent<Rigidbody>();
         if (!IsServer)
         {
             speed = Speed.Value;
