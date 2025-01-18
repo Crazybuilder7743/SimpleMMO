@@ -80,6 +80,5 @@ public class Enemy : NetworkBehaviour , IDamageable
         Destroy(mesh);
         this.gameObject.GetComponent<BoxCollider>().isTrigger = true;
         Destroy(Instantiate(shatterEffectObject,this.transform,false),dissAppearTime);
-        //play shatter effect
     }
 }
